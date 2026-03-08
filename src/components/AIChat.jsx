@@ -1,11 +1,13 @@
+// src/components/AIChat.jsx
 import { useState, useRef, useEffect } from "react"
 import { FaTimes, FaPaperPlane } from "react-icons/fa"
+import { projects } from "../data/projects"
 
 function AIChat({ isOpen, onClose }) {
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      text: "Hi! I'm Palesa's AI assistant. Ask me anything about her skills, projects, or experience."
+      text: "Hi! I'm Palesa's AI assistant. Ask me anything about her projects, skills, or experience."
     }
   ])
   const [input, setInput] = useState("")
@@ -15,6 +17,12 @@ function AIChat({ isOpen, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = "hidden"
+    else document.body.style.overflow = "auto"
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const sendMessage = () => {
@@ -23,21 +31,47 @@ function AIChat({ isOpen, onClose }) {
     const userMessage = { role: "user", text: input }
     setMessages((prev) => [...prev, userMessage])
 
-    // Fake AI response (placeholder, you can hook OpenAI later)
-    const aiReply = {
-      role: "ai",
-      text: "Thanks for your question! Palesa is a frontend developer skilled in React, JavaScript, and building responsive web applications."
-    }
-
+    // Generate dynamic AI reply
+    const aiReply = generateAIResponse(input)
     setTimeout(() => {
-      setMessages((prev) => [...prev, aiReply])
-    }, 600)
+      setMessages((prev) => [...prev, { role: "ai", text: aiReply }])
+    }, 700)
 
     setInput("")
   }
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") sendMessage()
+  }
+
+  // --- AI logic ---
+  function generateAIResponse(query) {
+    const q = query.toLowerCase()
+
+    // Skills
+    if (q.includes("skill") || q.includes("tools") || q.includes("tech stack")) {
+      return `Palesa is skilled in frontend development using JavaScript, React, Next.js, Tailwind CSS, HTML5, and CSS3. She also works with Git, GitHub, Canva, Google Workspace, and has experience integrating AI tools.`
+    }
+
+    // Projects
+    if (q.includes("project") || q.includes("work") || q.includes("portfolio")) {
+      let response = "Here are some highlights from Palesa's projects:\n\n"
+      projects.forEach((p, i) => {
+        response += `${i + 1}. ${p.title} - ${p.description}\nTech: ${p.tech.join(", ")}\n`
+        if (p.link) response += `See it here: ${p.link}\n`
+        if (p.github) response += `Code: ${p.github}\n`
+        response += "\n"
+      })
+      return response
+    }
+
+    // Experience / Bootcamp / Career path
+    if (q.includes("experience") || q.includes("career") || q.includes("bootcamp") || q.includes("journey")) {
+      return `Palesa started her coding journey at CodeSpace Software Development Bootcamp, where she learned JavaScript, React, and modern frontend frameworks. She has built multiple responsive web apps, handled client websites, and enjoys turning complex ideas into smooth, interactive experiences. Her experience comes from hands-on projects, internships, and freelance work, always focusing on user-friendly design and clean code.`
+    }
+
+    // Default / fallback
+    return "That's interesting! Palesa has a diverse set of projects and experiences. Try asking about her skills, specific projects, or coding journey."
   }
 
   return (
@@ -70,7 +104,7 @@ function AIChat({ isOpen, onClose }) {
                     : "bg-gray-800/80 text-gray-200"
                   }`}
               >
-                {msg.text}
+                {msg.text.split("\n").map((line, i) => <p key={i}>{line}</p>)}
               </div>
             </div>
           ))}
